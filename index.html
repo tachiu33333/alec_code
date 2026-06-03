@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Defense Contracts & Stock Returns</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="eyebrow">Financial Research · Event Study · 2022–2023</div>
+    <h1>Do Government Contract Awards Move Defense Stocks?</h1>
+    <p class="subtitle">An event study testing whether large supplemental contract modifications produce abnormal stock returns across 6 major defense contractors.</p>
+    <div class="meta">
+      <span>6 companies: LMT, RTX, BA, NOC, GD, BAH</span>
+      <span>5,211 contract events ≥ $10M</span>
+      <span>5-day window, S&P 500 adjusted</span>
+      <span>USAspending.gov + yfinance</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <h2>Results</h2>
+    <p>The hypothesis is <strong>not supported</strong>. Contract increases do not produce positive excess returns — if anything, the opposite is true. Contract decreases show no statistically significant effect.</p>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num" style="color:#b03030">−0.57%</div>
+        <div class="stat-desc">Mean excess return<br>on increases (n=4,956)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:#6b6560">−0.16%</div>
+        <div class="stat-desc">Mean excess return<br>on decreases (n=255)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">p &lt; 0.001</div>
+        <div class="stat-desc">Increases vs. decreases<br>are significantly different</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:#b03030">−1.90%</div>
+        <div class="stat-desc">Median excess return<br>on increases</div>
+      </div>
+    </div>
+
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="finding-label">Contract Increases · n = 4,956</div>
+        <div class="finding-num neg">−0.57%</div>
+        <p class="finding-desc">Mean market-adjusted return after a contract increase. Significant and negative — opposite of the hypothesis.</p>
+        <span class="badge sig">✓ Significant · p &lt; 0.0001</span>
+      </div>
+      <div class="finding-card">
+        <div class="finding-label">Contract Decreases · n = 255</div>
+        <div class="finding-num neu">−0.16%</div>
+        <p class="finding-desc">Near-zero effect. Decreases do not reliably move stock prices in either direction.</p>
+        <span class="badge not-sig">✗ Not significant · p = 0.186</span>
+      </div>
+    </div>
+
+    <p class="callout"><strong>Interpretation:</strong> Major contract awards are likely already priced in before the official modification date, or anticipated by institutional investors who track government procurement calendars.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Charts</h2>
+    <div class="chart-wrap">
+      <img src="contract_stock_results.png" alt="Four-panel chart showing excess returns by contract direction, modification size vs return, mean by company, and return distributions" />
+    </div>
+    <p class="chart-cap">Gov Contract Modifications → 5-Day Excess Stock Returns (market-adjusted, min modification = $10M)</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>By Company</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Increases (n)</th>
+          <th>Decreases (n)</th>
+          <th>Inc. Return</th>
+          <th>Dec. Return</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>BA — Boeing</td>
+          <td>1,230</td>
+          <td>106</td>
+          <td class="pos">+1.67%</td>
+          <td class="pos">+1.39%</td>
+        </tr>
+        <tr>
+          <td>BAH — Booz Allen Hamilton</td>
+          <td>251</td>
+          <td>4</td>
+          <td class="pos">+0.07%</td>
+          <td class="pos">+1.51%</td>
+        </tr>
+        <tr>
+          <td>GD — General Dynamics</td>
+          <td>346</td>
+          <td>11</td>
+          <td class="neg">−0.99%</td>
+          <td class="neg">−1.68%</td>
+        </tr>
+        <tr>
+          <td>LMT — Lockheed Martin</td>
+          <td>1,635</td>
+          <td>83</td>
+          <td class="neg">−1.77%</td>
+          <td class="neg">−1.81%</td>
+        </tr>
+        <tr>
+          <td>NOC — Northrop Grumman</td>
+          <td>943</td>
+          <td>22</td>
+          <td class="neg">−1.72%</td>
+          <td class="neg">−1.27%</td>
+        </tr>
+        <tr>
+          <td>RTX — Raytheon</td>
+          <td>551</td>
+          <td>29</td>
+          <td class="neg">−0.05%</td>
+          <td class="pos">+0.04%</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="callout"><strong>Note:</strong> BA and BAH are the only companies with positive excess returns on increases. LMT and NOC — with the most events — show the most consistent negative excess returns. BAH's decrease sample (n=4) is too small to be reliable.</p>
+  </div>
+</section>
+
+<footer>
+  <span>Data: USAspending.gov API · Yahoo Finance · S&P 500</span>
+  <span>Period: 2022–2023 · Min modification: $10M · Window: 5 trading days</span>
+</footer>
+
+</body>
+</html>

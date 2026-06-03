@@ -1,18 +1,3 @@
-"""
-Contract Modification → Stock Price Analysis
-Hypothesis: Large supplemental government contract awards → stock rises
-            Contract decreases / paybacks → stock falls
-
-Requirements:
-    pip install requests yfinance pandas matplotlib seaborn scipy
-
-Strategy:
-    1. Use /v2/search/spending_by_award/ to find award IDs for each company
-    2. Use /v2/transactions/ per award to get individual modifications
-    3. Match modification dates + amounts to stock price movements
-    4. Control for market-wide moves using S&P 500
-"""
-
 import requests
 import yfinance as yf
 import pandas as pd
@@ -21,8 +6,6 @@ import seaborn as sns
 from scipy import stats
 from datetime import timedelta
 import time
-
-# ── Configuration ─────────────────────────────────────────────────────────────
 
 COMPANIES = {
     "LMT": "Lockheed Martin",
@@ -33,17 +16,13 @@ COMPANIES = {
     "BAH": "Booz Allen Hamilton",
 }
 
-EVENT_WINDOW_DAYS    = 5           # trading days after event to measure return
-MIN_MOD_AMOUNT       = 10_000_000  # $10M minimum modification size
-MAX_AWARDS_PER_CO    = 20          # cap awards fetched per company
+EVENT_WINDOW_DAYS    = 5
+MIN_MOD_AMOUNT       = 10_000_000
+MAX_AWARDS_PER_CO    = 20
 START_DATE           = "2022-01-01"
 END_DATE             = "2023-12-31"
 
-
-# ── Step 1: Find award IDs for a company ──────────────────────────────────────
-
 def fetch_award_ids(company_name: str, ticker: str) -> list:
-    """Get top contract award IDs using spending_by_award."""
     print(f"  [{ticker}] Searching awards for '{company_name}'...")
 
     url = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
@@ -73,11 +52,7 @@ def fetch_award_ids(company_name: str, ticker: str) -> list:
         print(f"    Error fetching awards: {e}")
         return []
 
-
-# ── Step 2: Get individual transactions (modifications) per award ─────────────
-
 def fetch_transactions_for_award(award_id: str) -> pd.DataFrame:
-    """Get all transactions for a specific award (modification history)."""
     url = "https://api.usaspending.gov/api/v2/transactions/"
     payload = {
         "award_id": award_id,
@@ -99,9 +74,7 @@ def fetch_transactions_for_award(award_id: str) -> pd.DataFrame:
     except Exception:
         return pd.DataFrame()
 
-
 def fetch_all_modifications(award_ids: list, ticker: str) -> pd.DataFrame:
-    """Fetch and filter modifications across all awards for a company."""
     all_transactions = []
 
     for award_id in award_ids:
@@ -109,11 +82,9 @@ def fetch_all_modifications(award_ids: list, ticker: str) -> pd.DataFrame:
         if df.empty:
             continue
 
-        # Skip the base award (mod #0), keep modifications only
         if "modification_number" in df.columns:
             df = df[df["modification_number"] != "0"]
 
-        # Filter by dollar size
         if "federal_action_obligation" in df.columns:
             df["federal_action_obligation"] = pd.to_numeric(
                 df["federal_action_obligation"], errors="coerce"
@@ -123,7 +94,7 @@ def fetch_all_modifications(award_ids: list, ticker: str) -> pd.DataFrame:
         if not df.empty:
             all_transactions.append(df)
 
-        time.sleep(0.3)  # be polite to the API
+        time.sleep(0.3)
 
     if not all_transactions:
         return pd.DataFrame()
@@ -137,9 +108,6 @@ def fetch_all_modifications(award_ids: list, ticker: str) -> pd.DataFrame:
     print(f"    {len(combined)} significant modifications (>= ${MIN_MOD_AMOUNT:,.0f})")
     return combined
 
-
-# ── Step 3: Stock prices ──────────────────────────────────────────────────────
-
 def fetch_stock_prices(ticker: str) -> pd.DataFrame:
     print(f"  [{ticker}] Fetching stock prices...")
     start = (pd.to_datetime(START_DATE) - timedelta(days=15)).strftime("%Y-%m-%d")
@@ -150,7 +118,6 @@ def fetch_stock_prices(ticker: str) -> pd.DataFrame:
     df.columns = ["date", "close"]
     df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
     return df.sort_values("date").reset_index(drop=True)
-
 
 def fetch_sp500() -> pd.DataFrame:
     print("  Fetching S&P 500 benchmark...")
@@ -163,15 +130,11 @@ def fetch_sp500() -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
     return df.sort_values("date").reset_index(drop=True)
 
-
-# ── Step 4: Match events to stock returns ─────────────────────────────────────
-
 def get_price_after_n_days(event_date, prices: pd.DataFrame, n: int):
     future = prices[prices["date"] >= event_date]
     if len(future) < n + 1:
         return None, None, None
     return future.iloc[0]["date"], future.iloc[0]["close"], future.iloc[min(n, len(future)-1)]["close"]
-
 
 def compute_event_returns(modifications: pd.DataFrame,
                            stock_prices: pd.DataFrame,
@@ -214,9 +177,6 @@ def compute_event_returns(modifications: pd.DataFrame,
 
     return pd.DataFrame(results)
 
-
-# ── Step 5: Stats ─────────────────────────────────────────────────────────────
-
 def run_hypothesis_test(results: pd.DataFrame):
     print("\n" + "═" * 55)
     print("HYPOTHESIS TEST RESULTS")
@@ -246,9 +206,6 @@ def run_hypothesis_test(results: pd.DataFrame):
         print(f"\n── INCREASES vs DECREASES ──")
         print(f"  T-test:  t={t:.3f}, p={p:.4f}  {sig}")
 
-
-# ── Step 6: Plots ─────────────────────────────────────────────────────────────
-
 def plot_results(results: pd.DataFrame):
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(
@@ -257,9 +214,8 @@ def plot_results(results: pd.DataFrame):
         fontsize=13
     )
 
-    palette = {"increase": "#27ae60", "decrease": "#e74c3c"}
+    palette = {"increase": "
 
-    # 1: Box plot by direction
     ax = axes[0, 0]
     sns.boxplot(data=results, x="direction", y="excess_return", palette=palette, ax=ax)
     ax.axhline(0, color="black", linestyle="--", lw=1)
@@ -268,7 +224,6 @@ def plot_results(results: pd.DataFrame):
     ax.set_xlabel("")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{y*100:.1f}%"))
 
-    # 2: Scatter — mod size vs return
     ax = axes[0, 1]
     colors = results["direction"].map(palette)
     ax.scatter(results["mod_amount"] / 1e6, results["excess_return"],
@@ -280,13 +235,12 @@ def plot_results(results: pd.DataFrame):
     ax.set_ylabel("Excess Return")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{y*100:.1f}%"))
 
-    # 3: Mean excess return by ticker
     ax = axes[1, 0]
     ticker_means = (
         results.groupby(["ticker", "direction"])["excess_return"]
         .mean().unstack(fill_value=0)
     )
-    ticker_means.plot(kind="bar", ax=ax, color=["#e74c3c", "#27ae60"], edgecolor="white")
+    ticker_means.plot(kind="bar", ax=ax, color=["
     ax.axhline(0, color="black", linestyle="--", lw=1)
     ax.set_title("Mean Excess Return by Company")
     ax.set_ylabel("Mean Excess Return")
@@ -295,7 +249,6 @@ def plot_results(results: pd.DataFrame):
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{y*100:.1f}%"))
     plt.setp(ax.get_xticklabels(), rotation=30)
 
-    # 4: Distribution of excess returns
     ax = axes[1, 1]
     for direction, color in palette.items():
         subset = results[results["direction"] == direction]["excess_return"]
@@ -310,9 +263,6 @@ def plot_results(results: pd.DataFrame):
     plt.savefig("contract_stock_results.png", dpi=150, bbox_inches="tight")
     print("\nPlot saved → contract_stock_results.png")
     plt.show()
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     sp500 = fetch_sp500()
@@ -355,7 +305,6 @@ def main():
 
     run_hypothesis_test(combined)
     plot_results(combined)
-
 
 if __name__ == "__main__":
     main()
